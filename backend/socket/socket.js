@@ -16,13 +16,31 @@ const io = new Server(server, {
   },
 });
 
+export const getReceiverSocketId = (receiverId) => {
+  return userSocketMap[receiverId];
+}
+
 const userSocketMap = {};
 // Handle client connections
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+
+  const userId = socket.handshake.query.userId
+
+  if(userId !== undefined){
+    userSocketMap[userId] = socket.id;
+  }
+
+  io.emit('getOnlineUsers',Object.keys(userSocketMap));
+
+  socket.on("disconnect",()=>{
+    console.log("A user disconnected", socket.id);
+    delete userSocketMap[userId];
+    io.emit('getOnlineUsers',Object.keys(userSocketMap));
+  })
 });
 
 // Listen on a port (e.g., 8080)
-server.listen(8080);
+//server.listen(8080);
 // Export app, io, and server for testing or additional configuration
 export { app, io, server };
